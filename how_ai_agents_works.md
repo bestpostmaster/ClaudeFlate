@@ -10,11 +10,14 @@ Le processus complet a une seule source :
 [.claude/feature-workflow.md](.claude/feature-workflow.md).
 La configuration, les prérequis, les tests et les résultats d'audit sont décrits
 dans [.claude/README.md](.claude/README.md).
-Les règles NestJS/Angular sont dans [coding_standards.md](coding_standards.md).
+Les règles génériques sont dans [coding_standards.md](coding_standards.md), les
+règles de stack dans [standards/](standards/) et les commandes autorisées dans
+[.claude/project.conf](.claude/project.conf). Le squelette fonctionne avec tout
+langage ou framework.
 
 ```mermaid
 flowchart TD
-    U[Besoin autonome et critères AC] --> P[Sonnet : état initial, services requis et plan]
+    U[Besoin autonome et critères AC] --> P[Sonnet : état initial, prérequis et plan]
     P --> D{Prérequis et permissions disponibles ?}
     D -->|Non| B[Plan et diagnostic FEATURE_BLOCKED]
     D -->|Oui| H[Haiku : code et tests ciblés]
@@ -24,7 +27,7 @@ flowchart TD
     C -->|Oui, budget épuisé| B
     C -->|Non| I{Feature sensible ?}
     I -->|Oui| Q[Sonnet indépendant : review en lecture seule]
-    I -->|Non| G[Sonnet : validations finales Docker]
+    I -->|Non| G[Sonnet : validations finales]
     Q --> V{Défaut confirmé ?}
     V -->|Oui, budget disponible| H
     V -->|Oui, budget épuisé| B
@@ -47,5 +50,5 @@ migrations. L'architecte dispose directement de l'autorisation d'édition Markdo
 
 `context: fork` ne transmet pas toute la discussion antérieure : donner à
 `/feature` un besoin complet, ou le chemin d'une spécification avec ses critères.
-Aucun service hors périmètre n'est exigé. Les échecs préexistants sont distingués
+Aucun prérequis hors périmètre n'est exigé. Les échecs préexistants sont distingués
 des régressions, mais un check ou test obligatoire en échec empêche l'approbation.

@@ -3,6 +3,7 @@
 set -uo pipefail
 HOOK="$(dirname "$(readlink -f "$0")")/guard-subagent.sh"
 export CLAUDE_PROJECT_DIR="$(readlink -f "$(dirname "$HOOK")/../..")"
+export CLAUDE_PROJECT_CONF="$CLAUDE_PROJECT_DIR/.claude/presets/docker-compose-npm.conf"
 fail=0
 
 # verdict <profil> <json> -> "allow" | "deny"
@@ -160,7 +161,6 @@ G deny 'git status; git push'
 
 # État et autorisations dans un projet temporaire, jamais dans le dépôt réel.
 TASK_TMP="$(mktemp -d)"
-trap 'rm -rf -- "$TASK_TMP"' EXIT
 export CLAUDE_PROJECT_DIR="$TASK_TMP"
 mkdir -p "$TASK_TMP/.claude"
 # Index de fixture local uniquement : permet de vérifier un vrai diff initial.
@@ -185,9 +185,9 @@ if [[ "$(jq -r '.cycles' "$TASK_TMP/.claude/runtime/test-session--reviewer-one.j
   echo 'FAIL compteur persistant'; fail=1
 fi
 
-if ! rg -q 'snapshot.md' "$TASK_TMP/.claude/runtime/test-session--reviewer-one.initial-status.txt" ||
-  ! rg -q '^\+modified$' "$TASK_TMP/.claude/runtime/test-session--reviewer-one.initial-diff.patch" ||
-  ! rg -q '^\+original$' "$TASK_TMP/.claude/runtime/test-session--reviewer-one.initial-cached-diff.patch"; then
+if ! grep -Eq 'snapshot.md' "$TASK_TMP/.claude/runtime/test-session--reviewer-one.initial-status.txt" ||
+  ! grep -Eq '^\+modified$' "$TASK_TMP/.claude/runtime/test-session--reviewer-one.initial-diff.patch" ||
+  ! grep -Eq '^\+original$' "$TASK_TMP/.claude/runtime/test-session--reviewer-one.initial-cached-diff.patch"; then
   echo 'FAIL instantané avant première délégation'; fail=1
 fi
 
@@ -297,5 +297,25 @@ route_expect deny '{"agent_type":"independent-reviewer","tool_name":"Agent","too
 route_expect deny '{"tool_name":"Agent","tool_input":{"subagent_type":"coder"}}' 'session principale ne remplace pas reviewer'
 route_expect allow '{"tool_name":"Bash","tool_input":{"command":"ls"}}' 'conversation ordinaire hors workflow'
 export CLAUDE_PROJECT_DIR="$R"
+
+# --- project.conf par défaut (cibles make) : le squelette n'est lié à aucune stack
+export CLAUDE_PROJECT_CONF="$R/.claude/project.conf"
+B allow coder 'make test'
+B allow coder 'make format'
+B allow reviewer 'make check'
+B deny reviewer 'make format'
+B deny coder 'make deploy'
+B deny coder 'make test -C /tmp'
+B deny coder 'docker compose exec back npm run check'
+B deny coder 'npm install foo'
+B allow coder 'git status'
+F deny coder "$R/Makefile"
+F deny coder "$R/Cargo.lock"
+F deny coder "$R/go.mod"
+F deny coder "$R/composer.json"
+F allow coder "$R/src/main.rs"
+# --- conf illisible : tout est refusé
+export CLAUDE_PROJECT_CONF="$R/.claude/absent.conf"
+B deny coder 'make test'
 
 [[ $fail -eq 0 ]] && echo "TOUS LES TESTS PASSENT" || { echo "ÉCHECS"; exit 1; }

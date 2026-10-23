@@ -13,6 +13,17 @@ PROFILE="${1:?profil requis : coder|reviewer|readonly}"
 [[ "$PROFILE" == coder || "$PROFILE" == reviewer || "$PROFILE" == readonly ]] || exit 2
 INPUT="$(cat)"
 source "$(dirname "$0")/workflow-state.sh"
+
+# Configuration propre au projet (outillage, commandes autorisées). Voir .claude/project.conf.
+PROJECT_CONF="${CLAUDE_PROJECT_CONF:-$(dirname "$0")/../project.conf}"
+[[ -r "$PROJECT_CONF" ]] || { echo "BLOCKED : configuration projet illisible : $PROJECT_CONF" >&2; exit 2; }
+VALIDATION_RE='' CODER_RE='' INSPECT_RE='' EXCEPTION_RE='' EXCEPTION_DENY_RE='' ALLOWED_HINT=''
+EXTRA_SENSITIVE_FILES_RE='' EXTRA_SENSITIVE_PATHS_RE=''
+IMMUTABLE_PATHS_RE='(^|/)(db/migrate|migrations?|alembic/versions)/'
+# shellcheck source=/dev/null
+source "$PROJECT_CONF"
+# Vrai si $1 (commande) correspond à la regex $2 ; une regex vide ne correspond jamais.
+matches() { [[ -n "$2" && "$1" =~ $2 ]]; }
 TOOL="$(jq -r '.tool_name // empty' <<<"$INPUT")"
 
 deny() { echo "BLOCKED ($PROFILE) : $1" >&2; exit 2; }
@@ -50,42 +61,29 @@ bash_guard() {
   cmd="${cmd# }"
   cmd="${cmd% }"
 
-  # 2. Liste blanche de formes exactes.
-  local rest='( -- [^ ].*)?'
-  local dexec='^docker compose exec( -T)? (back|front) npm '
-  local common='(test|run (check|lint|format:check|typecheck|test|test:cov|test:e2e|build))'
-  local coder_only='run (format|lint:fix)'
-
-  if [[ "$cmd" =~ ${dexec}${common}${rest}$ ]]; then
-    allow 'validation Docker'
+  # 2. Liste blanche de formes exactes, définie dans project.conf.
+  if matches "$cmd" "$VALIDATION_RE"; then
+    allow 'validation du projet'
   fi
-  if [[ "$PROFILE" == coder && "$cmd" =~ ${dexec}${coder_only}$ ]]; then
-    allow 'commande Docker de développement'
+  if [[ "$PROFILE" == coder ]] && matches "$cmd" "$CODER_RE"; then
+    allow 'commande de développement du projet'
   fi
-  if [[ "$PROFILE" == coder && "$cmd" =~ ^docker\ compose\ exec(\ -T)?\ back\ npm\ run\ migration:(run|revert|show)$ ]]; then
-    allow 'migration back dans Docker'
-  fi
-  local migration='^docker compose exec( -T)? back npm run migration:(generate|create) -- src/database/migrations/[A-Za-z0-9_-]+$'
-  if [[ "$PROFILE" == coder && "$cmd" =~ $migration ]]; then
-    allow 'création de migration back dans Docker'
-  fi
-  if [[ "$cmd" =~ ^docker\ compose\ ps$ ]] ||
-    [[ "$cmd" =~ ^docker\ compose\ logs\ --tail\ [0-9]+\ (back|front|worker|postgres|redis)$ ]]; then
-    allow 'inspection Docker'
+  if matches "$cmd" "$INSPECT_RE"; then
+    allow 'inspection de l environnement'
   fi
   if [[ "$cmd" =~ ^git\  ]] && git_readonly_ok "$cmd"; then
     allow 'git en lecture seule'
   fi
 
-  # Exceptions humaines exactes : Docker uniquement, jamais un shell/Git interne.
-  local exception='^docker compose (exec( -T)? (back|front) npm (install|uninstall)( [A-Za-z0-9_./:=@,+~-]+)*|up( -d)?( --build)?( (back|front|worker|postgres|redis))*|build( (back|front|worker))*|restart( (back|front|worker|postgres|redis))+|run --rm --no-deps (back|front) npm (test|run (check|lint|format:check|typecheck|test|test:cov|test:e2e|build))( -- [A-Za-z0-9_./:=@,+~ -]+)?)$'
-  if [[ "$PROFILE" == coder && "$cmd" =~ $exception ]] &&
+  # Exceptions humaines exactes : jamais un shell/Git interne.
+  if [[ "$PROFILE" == coder ]] && matches "$cmd" "$EXCEPTION_RE" &&
     [[ ! "$cmd" =~ (^|[[:space:]])(sh|bash|git|node|psql|--entrypoint|--privileged)([[:space:]]|$) ]] &&
+    ! matches "$cmd" "$EXCEPTION_DENY_RE" &&
     approval_ok commands "$cmd"; then
-    allow 'exception Docker exacte autorisée par humain pour cette session'
+    allow 'exception exacte autorisée par humain pour cette session'
   fi
 
-  deny "commande non autorisée : « $cmd ». Autorisé : docker compose exec [-T] <back|front> npm (test | run check|lint|format:check|typecheck|test|test:cov|test:e2e|build$([[ $PROFILE == coder ]] && echo '|format|lint:fix|migration:*')) [-- args] ; docker compose ps|logs --tail N <service> ; git status|diff|log|show. Pour tout le reste (install, up/down, make, scripts), demander à l'humain."
+  deny "commande non autorisée : « $cmd ». ${ALLOWED_HINT:-Voir .claude/project.conf.} Lecture seule autorisée pour l'historique du dépôt (status, diff, log, show). Pour tout le reste (installation, démarrage, scripts), demander à l'humain."
 }
 
 file_guard() {
@@ -115,25 +113,30 @@ file_guard() {
       ;;
   esac
   case "${rel##*/}" in
-    Makefile | package.json | package-lock.json | npm-shrinkwrap.json | yarn.lock | pnpm-lock.yaml | bun.lock | bun.lockb | \
+    Makefile | GNUmakefile | justfile | Taskfile.yml | package.json | package-lock.json | npm-shrinkwrap.json | yarn.lock | pnpm-lock.yaml | bun.lock | bun.lockb | \
+      composer.json | composer.lock | Cargo.toml | Cargo.lock | go.mod | go.sum | pyproject.toml | poetry.lock | uv.lock | Pipfile | Pipfile.lock | \
+      requirements*.txt | Gemfile | Gemfile.lock | pom.xml | build.gradle | build.gradle.kts | settings.gradle* | gradle.properties | \
+      *.csproj | *.sln | Package.swift | mix.exs | mix.lock | pubspec.yaml | pubspec.lock | \
       Dockerfile | Dockerfile.* | *.Dockerfile | docker-compose*.yml | docker-compose*.yaml | compose*.yml | compose*.yaml | \
       .gitlab-ci*.yml | .gitlab-ci*.yaml | Jenkinsfile | Jenkinsfile.* | azure-pipelines*.yml | azure-pipelines*.yaml | .travis.yml)
       if approval_ok files "$rel"; then allow 'édition sensible exacte autorisée par humain'; fi
       deny "fichier sensible (dépendances, Docker ou CI) : $rel — proposition et autorisation humaine nécessaires."
       ;;
   esac
+  if matches "${rel##*/}" "$EXTRA_SENSITIVE_FILES_RE" || matches "$rel" "$EXTRA_SENSITIVE_PATHS_RE"; then
+    if approval_ok files "$rel"; then allow 'édition sensible exacte autorisée par humain'; fi
+    deny "fichier sensible déclaré dans project.conf : $rel — proposition et autorisation humaine nécessaires."
+  fi
   case "$rel" in
     .github/* | */.github/* | .circleci/* | */.circleci/* | .buildkite/* | */.buildkite/*)
       if approval_ok files "$rel"; then allow 'édition CI exacte autorisée par humain'; fi
       deny "configuration CI protégée : $rel — proposition et autorisation humaine nécessaires."
       ;;
-    back/src/database/migrations/*)
-      # Les nouvelles migrations restent éditables tant qu'elles ne sont pas versionnées.
-      if git -C "$root" ls-files --error-unmatch -- "$rel" >/dev/null 2>&1; then
-        deny "migration déjà versionnée : $rel — créer une nouvelle migration."
-      fi
-      ;;
   esac
+  # Les nouvelles migrations restent éditables tant qu'elles ne sont pas versionnées.
+  if matches "$rel" "$IMMUTABLE_PATHS_RE" && git -C "$root" ls-files --error-unmatch -- "$rel" >/dev/null 2>&1; then
+    deny "migration déjà versionnée : $rel — créer une nouvelle migration."
+  fi
   allow 'modification dans le périmètre du projet'
 }
 

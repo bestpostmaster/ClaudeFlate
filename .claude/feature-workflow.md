@@ -1,7 +1,9 @@
 # Politique du workflow `/feature`
 
-Source unique du processus ; `coding_standards.md` reste la source des règles
-applicatives. Sonnet planifie et valide, **Haiku est le seul coder**, sans
+Source unique du processus, indépendant de la stack ; `coding_standards.md` et
+les `standards/` référencés par `CLAUDE.md` restent la source des règles
+applicatives. Les commandes, services et outils propres au projet sont déclarés
+dans `CLAUDE.md` (« Stack et commandes ») et `.claude/project.conf`. Sonnet planifie et valide, **Haiku est le seul coder**, sans
 remplacement de modèle. `architect-reviewer` peut créer et modifier les fichiers
 `.md` du projet via `Edit`/`Write`, notamment documentation, spécifications,
 rapports, `CLAUDE.md`, `AGENTS.md`, `coding_standards.md` et Markdown sous
@@ -25,27 +27,29 @@ initiaux et les commandes avec résultat, nombre de tests et durée.
 
 ## Prérequis selon le périmètre
 
-L'analyse et le plan restent possibles sans Docker. Avant d'implémenter,
-inspecter `docker compose ps` et sélectionner les services nécessaires :
+L'analyse et le plan restent possibles sans environnement d'exécution. Avant
+d'implémenter, déterminer le périmètre (unité, intégration, bout en bout,
+documentation seule) et vérifier que l'environnement déclaré dans `CLAUDE.md`
+fournit ce qu'il exige, par exemple :
 
-| Travail | Services nécessaires |
+| Travail | Prérequis |
 | --- | --- |
-| Front avec HTTP mocké, checks, tests et build | front |
-| Back unitaire avec dépendances mockées, checks et build | back |
-| HTTP/DB, migrations ou intégration API | back, postgres sain, redis sain si utilisé au bootstrap |
-| Traitement BullMQ réel | back, worker, redis sain et postgres si utilisé |
-| Parcours navigateur front ↔ back | front et services nécessaires à l'API |
+| Code isolé, dépendances externes mockées, checks, tests et build | le seul projet/service concerné |
+| Intégration (base de données, migrations, API réelle) | ce projet + les services d'infrastructure sains |
+| Traitement asynchrone réel (file, worker) | projet, worker et broker sains |
+| Parcours bout en bout entre plusieurs parties | toutes les parties du parcours |
 | Documentation et hooks uniquement | aucun service applicatif |
 
-Un service sans healthcheck doit être démarré ; vérifier sa disponibilité réelle
-si le scénario l'utilise. Une sortie `ps` vide ne valide aucun prérequis.
-Si un service nécessaire manque, finir le plan et retourner `FEATURE_BLOCKED`
+Le tableau « Services nécessaires par périmètre » de `CLAUDE.md` prévaut. Un
+service sans healthcheck doit être démarré ; vérifier sa disponibilité réelle
+si le scénario l'utilise. Une sortie d'état vide ne valide aucun prérequis.
+Si un prérequis manque, finir le plan et retourner `FEATURE_BLOCKED`
 avec les validations impossibles et la commande de rétablissement proposée.
-Ne pas exiger les services hors périmètre. Le workflow ne démarre pas la stack
-sans autorisation exacte d'une commande (voir exceptions ci-dessous).
+Ne pas exiger ce qui est hors périmètre. Le workflow ne démarre pas
+l'environnement sans autorisation exacte d'une commande (voir exceptions).
 
-Avant les changements applicatifs, le reviewer exécute check et tests complets
-des projets touchés, plus les validations conditionnelles nécessaires au besoin.
+Avant les changements applicatifs, le reviewer exécute les checks et tests complets
+des zones touchées (commandes de `CLAUDE.md`), plus les validations conditionnelles nécessaires au besoin.
 Une configuration e2e absente ou cassée est un défaut initial, pas une validation.
 Documenter les échecs préexistants ; corriger ceux du périmètre dans le même plan.
 Pour un défaut hors périmètre, présenter le diagnostic et la correction proposée
@@ -98,13 +102,13 @@ aucun secret ; le journal n'est ni une preuve fonctionnelle ni un coffre-fort.
 
 Explorer de façon ciblée ; lire les règles une fois par contexte. Déléguer au
 coder objectif, AC, chemins, plan et tests attendus, sans recopier code/standards.
-Haiku écrit code et tests, puis lance les tests ciblés dans Docker. Zéro test
+Haiku écrit code et tests, puis lance les tests ciblés dans l'environnement du projet. Zéro test
 sélectionné ne valide rien. Les corrections utilisent un seul retour
 regroupé : fichier/symbole, défaut, comportement attendu et test de régression.
 
 Le reviewer examine tout le diff de la demande, les fichiers non suivis et le
 contexte pertinent ; il vérifie architecture, sécurité, typage, erreurs,
-accessibilité, migrations et contrat front/back. Les tests écrits par le coder
+accessibilité (si interface), migrations et contrats entre composants. Les tests écrits par le coder
 ne suffisent pas : contrôler leur pertinence et les preuves de chaque AC.
 
 Pour auth/permissions, exposition de données sensibles, migration risquée ou
@@ -118,8 +122,9 @@ d'intégration finale dans le plan lorsque les interactions sont importantes.
 Cette review ne compte pas comme un appel coder ; elle ne remplace pas les tests.
 
 Après review sans défaut bloquant, le reviewer lance check + suites complètes
-pour chaque projet touché, e2e si HTTP/DB change, build si templates/config Angular
-changent et coverage selon les standards. Les validations initiales ne remplacent
+pour chaque zone touchée, e2e/intégration si le comportement réseau ou base de
+données change, build si la configuration ou les templates changent et coverage
+selon les standards. Les validations initiales ne remplacent
 pas ce gate après modification. Toute nouvelle modification invalide les
 résultats affectés ; ne relancer que ce qui est invalidé.
 
@@ -135,20 +140,21 @@ en liant l'exception à la session Claude et à une expiration UTC Unix :
 {
   "session_id": "identifiant exact de la session dans le journal",
   "expires_at": 2000000000,
-  "files": ["back/package.json", "back/package-lock.json"],
-  "commands": ["docker compose exec -T back npm install paquet@version"]
+  "files": ["<chemin/manifeste>", "<chemin/lockfile>"],
+  "commands": ["<commande d'installation exacte, conforme à EXCEPTION_RE>"]
 }
 ```
 
 La date ci-dessus est illustrative : choisir une courte durée réelle.
 Seuls les chemins relatifs canoniques exacts et commandes simples exactes sont
-acceptés. Pas de wildcard, shell arbitraire, outil applicatif sur l'hôte ou Git
-d'écriture. Les exceptions de commande sont réservées à Docker Compose exec,
-run/up/build/restart ; proposer un sous-ensemble minimal pour le besoin.
+acceptés. Pas de wildcard, shell arbitraire, ni Git d'écriture. Les exceptions de
+commande sont limitées à la catégorie `EXCEPTION_RE` de `.claude/project.conf`
+(installation, démarrage de services…) ; proposer un sous-ensemble minimal.
 Pour le coder, les règles des agents restent protégées, même avec une exception.
 Le reviewer dispose de l'autorisation Markdown décrite ci-dessus. `.git`, secrets,
 journaux, anciennes migrations et chemins hors projet restent protégés. Les fichiers infra/CI,
-Makefile, manifests et lockfiles peuvent être autorisés individuellement.
+Makefile, manifestes et lockfiles (tous écosystèmes courants) peuvent être autorisés
+individuellement.
 Sans autorisation valide, retourner un blocage précis avec proposition prête.
 L'autorisation n'est pas déduite du temps écoulé. Supprimer les exceptions après
 usage côté humain ; elles restent valides jusqu'à expiration dans cette session.
