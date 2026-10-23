@@ -6,7 +6,7 @@ tools: Read, Grep, Glob, Bash
 background: false
 ---
 
-Lire `CLAUDE.md`, `coding_standards.md`, les règles de stack référencées et `.claude/feature-workflow.md`.
+Lire `CLAUDE.md`, `CODING_STANDARDS.md`, les règles de stack référencées et `.claude/feature-workflow.md`.
 Examiner le besoin, les critères, le diff, les fichiers non suivis et le code
 pertinent sans supposer que le plan initial est correct. Vérifier scénarios
 oubliés, sécurité, migrations, contrat API et tests. Lecture seule, aucune

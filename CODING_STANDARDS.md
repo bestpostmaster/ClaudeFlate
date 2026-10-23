@@ -1,4 +1,4 @@
-# coding_standards.md — Socle de règles pour l'agent IA
+# CODING_STANDARDS.md — Socle de règles pour l'agent IA
 
 Règles **indépendantes de toute technologie** que tout agent IA doit respecter lorsqu'il modifie ce dépôt.
 Objectif : un code **lisible, testé, sûr et cohérent**, quel que soit le langage ou le framework.

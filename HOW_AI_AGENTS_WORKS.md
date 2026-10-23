@@ -10,7 +10,7 @@ Le processus complet a une seule source :
 [.claude/feature-workflow.md](.claude/feature-workflow.md).
 La configuration, les prérequis, les tests et les résultats d'audit sont décrits
 dans [.claude/README.md](.claude/README.md).
-Les règles génériques sont dans [coding_standards.md](CODING_STANDARDS.md), les
+Les règles génériques sont dans [CODING_STANDARDS.md](CODING_STANDARDS.md), les
 règles de stack dans les fichiers que référence `CLAUDE.md`, et les commandes
 autorisées dans [.claude/project.conf](.claude/project.conf). Le squelette
 fonctionne avec toute technologie.

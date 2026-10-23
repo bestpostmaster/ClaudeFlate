@@ -32,9 +32,9 @@ Depuis la racine du squelette, vers la racine de votre projet :
 | --- | --- | --- |
 | `.claude/` (sauf `runtime/` et `feature-approvals.json`) | Agents, skill, hooks, politique, configuration | Voir « Fusionner » ci-dessous |
 | `CLAUDE.md` | Contexte du projet pour les agents | **Fusionner** : ne pas écraser le vôtre |
-| `coding_standards.md` | Règles génériques de codage | Fusionner ou remplacer par vos propres règles |
+| `CODING_STANDARDS.md` | Règles génériques de codage | Fusionner ou remplacer par vos propres règles |
 | `.claude/skills/caveman/` | Réponses concises pour économiser des tokens (facultatif, voir `UPSTREAM.md`) | Actif par défaut via le hook `SessionStart` ; pour s'en passer, supprimer le dossier **et** l'entrée `SessionStart` de `settings.json` |
-| `how_ai_agents_works.md`, `GUIDE_IMPORT.md` | Documentation, facultatifs | Copier si utile |
+| `HOW_AI_AGENTS_WORKS.md`, `GUIDE_IMPORT.md` | Documentation, facultatifs | Copier si utile |
 
 ### Fusionner avec l'existant
 
@@ -221,5 +221,5 @@ fichier sensible, l'agent prépare une proposition. Vous l'autorisez en créant
 
 - Politique complète du workflow : `.claude/feature-workflow.md`
 - Configuration, fichiers et limites des protections : `.claude/README.md`
-- Schéma du fonctionnement : `how_ai_agents_works.md`
-- Règles de codage génériques : `coding_standards.md`
+- Schéma du fonctionnement : `HOW_AI_AGENTS_WORKS.md`
+- Règles de codage génériques : `CODING_STANDARDS.md`

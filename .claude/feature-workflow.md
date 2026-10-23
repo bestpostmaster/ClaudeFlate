@@ -1,12 +1,12 @@
 # Politique du workflow `/feature`
 
-Source unique du processus, indépendant de la stack ; `coding_standards.md` et
+Source unique du processus, indépendant de la stack ; `CODING_STANDARDS.md` et
 les règles de stack référencées par `CLAUDE.md` restent la source des règles
 applicatives. Les commandes, services et outils propres au projet sont déclarés
 dans `CLAUDE.md` (« Stack et commandes ») et `.claude/project.conf`. Sonnet planifie et valide, **Haiku est le seul coder**, sans
 remplacement de modèle. `architect-reviewer` peut créer et modifier les fichiers
 `.md` du projet via `Edit`/`Write`, notamment documentation, spécifications,
-rapports, `CLAUDE.md`, `AGENTS.md`, `coding_standards.md` et Markdown sous
+rapports, `CLAUDE.md`, `AGENTS.md`, `CODING_STANDARDS.md` et Markdown sous
 `.claude/`. Le code applicatif reste délégué à Haiku. Les métadonnées Git,
 secrets et journaux runtime restent protégés ; la review indépendante reste
 sans édition. Git reste en lecture seule pour tous les agents.

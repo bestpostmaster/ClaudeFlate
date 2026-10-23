@@ -2,7 +2,7 @@
 
 Squelette d'agents Claude qui économise des tokens pendant le développement de
 features (Sonnet planifie et valide, Haiku code). Il est **indépendant de la
-stack** : copier `.claude/`, `CLAUDE.md`, `coding_standards.md` dans
+stack** : copier `.claude/`, `CLAUDE.md`, `CODING_STANDARDS.md` dans
 n'importe quel projet, puis renseigner la section « Stack et
 commandes » ci-dessous et `.claude/project.conf`. Pas à pas : **GUIDE_IMPORT.md**.
 
@@ -28,7 +28,7 @@ commandes » ci-dessous et `.claude/project.conf`. Pas à pas : **GUIDE_IMPORT.m
 
 ## Règles de codage
 
-Les règles génériques sont dans **@coding_standards.md** ; les règles propres à la
+Les règles génériques sont dans **@CODING_STANDARDS.md** ; les règles propres à la
 stack, dans les fichiers référencés ci-dessus. Les lire avant toute
 modification et les appliquer systématiquement.
 
@@ -46,7 +46,7 @@ les validations et les délégations nécessaires au workflow. Lancer le coder e
 lui retourner les corrections sans demander un nouvel accord à l'humain.
 
 Prendre les décisions techniques courantes en s'appuyant sur le code existant,
-`coding_standards.md`, la sécurité et les critères d'acceptation. Expliquer
+`CODING_STANDARDS.md`, la sécurité et les critères d'acceptation. Expliquer
 brièvement les choix retenus et poursuivre jusqu'à un résultat fonctionnel testé.
 Ne pas proposer une fonctionnalité incomplète pour éviter de trancher un choix
 technique, par exemple limiter une connexion au formulaire et à l'appel API.
@@ -54,7 +54,7 @@ technique, par exemple limiter une connexion au formulaire et à l'appel API.
 Demander une clarification uniquement si une information métier indispensable
 manque et qu'aucun choix raisonnable ne permet d'avancer. Une décision technique
 ordinaire, comme la gestion d'un jeton, relève de l'agent. Les actions sensibles
-listées dans `coding_standards.md` et les protections des hooks restent applicables.
+listées dans `CODING_STANDARDS.md` et les protections des hooks restent applicables.
 
 ## Workflow `/feature`
 

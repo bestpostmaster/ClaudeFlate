@@ -7,7 +7,7 @@ commandes »), `.claude/project.conf` décrivent votre projet, avec les règles 
 
 Guide détaillé, avec fusion de l'existant, exemple et dépannage : [GUIDE_IMPORT.md](../GUIDE_IMPORT.md).
 
-1. Copier `.claude/`, `CLAUDE.md`, `coding_standards.md`.
+1. Copier `.claude/`, `CLAUDE.md`, `CODING_STANDARDS.md`.
 2. Renseigner « Stack et commandes » dans `CLAUDE.md` et référencer vos standards.
 3. Renseigner `.claude/project.conf` : commandes de validation autorisées, fichiers
    sensibles, chemins protégés. **Il est vide par défaut** : tant qu'il n'est pas
@@ -25,7 +25,7 @@ toutes les opérations Git d'écriture.
 
 La politique est centralisée dans [feature-workflow.md](feature-workflow.md).
 Les agents et la skill y renvoient ; les règles applicatives restent dans
-[coding_standards.md](../CODING_STANDARDS.md).
+[CODING_STANDARDS.md](../CODING_STANDARDS.md).
 
 ## Prérequis
 

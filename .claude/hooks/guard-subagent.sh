@@ -107,7 +107,7 @@ file_guard() {
   case "$rel" in
     .env.example | */.env.example) ;;
     .claude | .claude/* | */.claude | */.claude/* | .git | .git/* | */.git | */.git/* | .env | .env.* | */.env | */.env.* | \
-      CLAUDE.md | */CLAUDE.md | AGENTS.md | */AGENTS.md | coding_standards.md | */coding_standards.md)
+      CLAUDE.md | */CLAUDE.md | AGENTS.md | */AGENTS.md | CODING_STANDARDS.md | */CODING_STANDARDS.md)
       deny "fichier protégé (config des agents, git, secrets ou règles) : $rel — modification réservée à l'humain."
       ;;
   esac
