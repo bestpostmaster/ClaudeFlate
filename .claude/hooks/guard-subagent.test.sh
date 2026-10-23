@@ -319,4 +319,46 @@ else
   echo "FAIL injection du style concis au démarrage"; fail=1
 fi
 
+# --- Contrôle de démarrage : RTK et caveman actifs, sinon avertissement
+CHECK="$(dirname "$HOOK")/session-check.sh"
+CK="$(mktemp -d)"
+trap 'rm -rf -- "$TASK_TMP" "$CK"' EXIT
+mkdir -p "$CK/bin" "$CK/proj/.claude/hooks" "$CK/proj/.claude/skills/caveman" "$CK/user"
+printf '#!/bin/sh\n' >"$CK/bin/rtk" && chmod +x "$CK/bin/rtk"
+cp "$CHECK" "$CK/proj/.claude/hooks/"
+printf 'x\n' >"$CK/proj/.claude/skills/caveman/SKILL.md"
+rtk_hook='{"hooks":{"PreToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"rtk hook claude"}]}]}}'
+style_hook='{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-style.sh"}]}]}}'
+check_run() { # <path> -> sortie du contrôle avec PATH restreint
+  env -i HOME="$CK/home" PATH="$1:/usr/bin:/bin" CLAUDE_CONFIG_DIR="$CK/user" CLAUDE_PROJECT_DIR="$CK/proj" \
+    bash "$CK/proj/.claude/hooks/session-check.sh"
+}
+check_expect() { # <libellé> <sortie> <motif ou "silence">
+  if [[ "$3" == silence ]]; then
+    [[ -z "$2" ]] && echo "ok   $1" || { echo "FAIL $1 : sortie inattendue"; fail=1; }
+  else
+    jq -e --arg re "$3" '(.systemMessage | test($re)) and (.hookSpecificOutput.hookEventName == "SessionStart")' <<<"$2" >/dev/null 2>&1 &&
+      echo "ok   $1" || { echo "FAIL $1"; fail=1; }
+  fi
+}
+printf '%s' "$rtk_hook" >"$CK/user/settings.json"
+printf '%s' "$style_hook" >"$CK/proj/.claude/settings.json"
+ok_out="$(check_run "$CK/bin")"
+if jq -e '(.systemMessage | test("🟢 RTK actif\n🟢 Caveman actif")) and (has("hookSpecificOutput") | not)' <<<"$ok_out" >/dev/null 2>&1; then
+  echo "ok   contrôle démarrage : tout actif -> message vert, rien pour Claude"
+else
+  echo "FAIL contrôle démarrage : tout actif -> message vert"; fail=1
+fi
+check_expect 'contrôle démarrage : binaire rtk absent' "$(check_run "")" 'RTK : commande'
+printf '{}' >"$CK/user/settings.json"
+check_expect 'contrôle démarrage : hook rtk absent' "$(check_run "$CK/bin")" 'RTK : hook'
+printf '%s' "$rtk_hook" >"$CK/user/settings.json"
+printf '{}' >"$CK/proj/.claude/settings.json"
+check_expect 'contrôle démarrage : hook caveman absent' "$(check_run "$CK/bin")" 'Caveman : hook'
+printf '%s' "$style_hook" >"$CK/proj/.claude/settings.json"
+rm "$CK/proj/.claude/skills/caveman/SKILL.md"
+check_expect 'contrôle démarrage : skill caveman absente' "$(check_run "$CK/bin")" 'Caveman : skill'
+printf 'pas du json' >"$CK/user/settings.json"
+check_expect 'contrôle démarrage : configuration illisible = avertissement' "$(check_run "$CK/bin")" 'RTK : hook'
+
 [[ $fail -eq 0 ]] && echo "TOUS LES TESTS PASSENT" || { echo "ÉCHECS"; exit 1; }

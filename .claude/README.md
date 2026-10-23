@@ -64,6 +64,7 @@ Préparer un besoin complet ; utiliser le modèle de spécification ci-dessous.
 | `hooks/test-fixture.conf` | Configuration fictive (`projectctl`) utilisée par le harnais de tests. |
 | `hooks/guard-subagent.sh` | Commandes, éditions, modèles et délégations. |
 | `hooks/workflow-state.sh` | Compteur verrouillé et autorisations humaines exactes. |
+| `hooks/session-check.sh` | Au démarrage, affiche 🟢 par outil actif (RTK, caveman), 🔴 + correction sinon. |
 | `hooks/session-style.sh` | Active le style concis au démarrage de la session principale. |
 | `hooks/journal-workflow.sh` | Observations des outils et retours des agents. |
 | `hooks/protect-git.sh` | Git visible dans Bash en lecture seule. |
@@ -134,6 +135,22 @@ gate final, compteur de cycles tenu par les hooks.
 Documentation officielle : [skills](https://code.claude.com/docs/en/skills),
 [sous-agents](https://code.claude.com/docs/en/sub-agents),
 [hooks](https://code.claude.com/docs/en/hooks).
+
+## Contrôle des outils d'économie de tokens
+
+`hooks/session-check.sh` (entrée `SessionStart`) vérifie à chaque démarrage que :
+
+- **RTK** (condensation de la sortie des commandes) est actif : commande `rtk` dans le
+  `PATH` **et** hook `rtk hook` déclaré (configuration utilisateur ou projet) ;
+- **caveman** (réponses concises) est actif : skill présente **et** hook
+  `session-style.sh` déclaré.
+
+Chaque démarrage affiche une ligne par outil : `🟢 RTK actif`, `🟢 Caveman actif`.
+Un outil défaillant passe en `🔴` avec la correction à appliquer (pour RTK :
+`rtk init -g`, puis redémarrer) ; l'avertissement `⚠ Économie de tokens incomplète`
+est alors aussi signalé à Claude.
+Le hook ne bloque jamais le démarrage. Limite : si l'entrée `session-check.sh` elle-même
+est retirée de `settings.json`, plus rien n'est vérifié.
 
 ## Skill `caveman` (réponses concises)
 

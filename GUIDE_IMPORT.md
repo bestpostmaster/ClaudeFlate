@@ -14,6 +14,9 @@ commandes lancer et quels fichiers protéger.
 | `bash`, `jq`, `flock`, `realpath`, `sed`, `date`, `mktemp`, `grep`, `git` | Utilisés par les hooks, sur la machine qui lance Claude |
 | Un dépôt Git | Les hooks lisent l'état initial et l'historique (lecture seule) |
 
+Facultatif mais contrôlé au démarrage : **RTK** (`rtk`, condensation des sorties de
+commandes) et la skill **caveman** fournie. Un avertissement s'affiche s'ils manquent.
+
 Vérification rapide :
 
 ```bash
@@ -41,7 +44,7 @@ Depuis la racine du squelette, vers la racine de votre projet :
   référencez-le avec `@fichier.md`.
 - **`.claude/settings.json` existant** : ne l'écrasez pas. Ajoutez-y le bloc `env` et
   les entrées `hooks` du `settings.json` du squelette (`PreToolUse`, `PostToolUse`,
-  `PostToolUseFailure`, `SubagentStop`, `SessionStart`). Gardez vos propres hooks et permissions.
+  `PostToolUseFailure`, `SubagentStop`, `SessionStart` ×2 : contrôle et style concis). Gardez vos propres hooks et permissions.
 - **Agents ou skills du même nom** (`coder`, `architect-reviewer`,
   `independent-reviewer`, `feature`) : renommez les vôtres ou ceux du squelette, sinon
   l'un masquera l'autre.
