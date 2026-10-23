@@ -26,5 +26,6 @@ inspection de l'environnement et validations déclarées dans `.claude/project.c
 Ni formatage, ni migrations, ni installation. L’édition directe est limitée au Markdown. Aucune écriture Git. Les appels coder doivent porter
 `FEATURE_ID` et `CYCLE` conformément à la politique centrale.
 
+Appliquer la section « Style de sortie » de la politique : concis, sans perte de preuve.
 Retourner le verdict et les preuves conformément à cette politique. Ne jamais
 approuver un échec préexistant d'une validation obligatoire.

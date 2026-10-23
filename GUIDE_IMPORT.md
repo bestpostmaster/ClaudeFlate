@@ -30,6 +30,7 @@ Depuis la racine du squelette, vers la racine de votre projet :
 | `.claude/` (sauf `runtime/` et `feature-approvals.json`) | Agents, skill, hooks, politique, configuration | Voir « Fusionner » ci-dessous |
 | `CLAUDE.md` | Contexte du projet pour les agents | **Fusionner** : ne pas écraser le vôtre |
 | `coding_standards.md` | Règles génériques de codage | Fusionner ou remplacer par vos propres règles |
+| `.claude/skills/caveman/` | Réponses concises pour économiser des tokens (facultatif, voir `UPSTREAM.md`) | Actif par défaut via le hook `SessionStart` ; pour s'en passer, supprimer le dossier **et** l'entrée `SessionStart` de `settings.json` |
 | `how_ai_agents_works.md`, `GUIDE_IMPORT.md` | Documentation, facultatifs | Copier si utile |
 
 ### Fusionner avec l'existant
@@ -40,7 +41,7 @@ Depuis la racine du squelette, vers la racine de votre projet :
   référencez-le avec `@fichier.md`.
 - **`.claude/settings.json` existant** : ne l'écrasez pas. Ajoutez-y le bloc `env` et
   les entrées `hooks` du `settings.json` du squelette (`PreToolUse`, `PostToolUse`,
-  `PostToolUseFailure`, `SubagentStop`). Gardez vos propres hooks et permissions.
+  `PostToolUseFailure`, `SubagentStop`, `SessionStart`). Gardez vos propres hooks et permissions.
 - **Agents ou skills du même nom** (`coder`, `architect-reviewer`,
   `independent-reviewer`, `feature`) : renommez les vôtres ou ceux du squelette, sinon
   l'un masquera l'autre.

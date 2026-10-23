@@ -159,6 +159,32 @@ Sans autorisation valide, retourner un blocage précis avec proposition prête.
 L'autorisation n'est pas déduite du temps écoulé. Supprimer les exceptions après
 usage côté humain ; elles restent valides jusqu'à expiration dans cette session.
 
+## Style de sortie
+
+Objectif : réduire les tokens produits **sans perdre d'information**. Principes
+inspirés de la skill `caveman` (voir `.claude/skills/caveman/`), appliqués ici sans
+la charger : elle coûterait des tokens d'entrée à chaque appel.
+
+- Aucun texte entre deux appels d'outils de routine. Une ligne avant une série
+  d'appels, une par changement de phase, une avec le résultat.
+- Réponse d'abord, puis raison, puis action suivante. Ni salutation, ni
+  reformulation de la demande, ni récapitulatif final, ni offre d'aide.
+- Mots courts, une idée par phrase, voix active. Ne jamais supprimer une négation,
+  une restriction (« seulement », « sauf ») ni un nombre.
+- Contenu exact et intégral : code, commandes, chemins, noms de symboles,
+  nombres de tests et durées. Citer une erreur par sa ligne décisive, exacte.
+- Montrer un changement par ses lignes modifiées plus un peu de contexte, pas le
+  fichier entier, sauf fichier nouveau ou réécriture majeure.
+- Ne pas répéter ce que le plan, les AC ou le diff contiennent déjà : y renvoyer.
+
+Jamais compressés : verdicts (`FEATURE_APPROVED`, `FEATURE_BLOCKED`,
+`CHANGES_REQUIRED`, `IMPLEMENTATION_READY_FOR_REVIEW`, `INDEPENDENT_REVIEW_COMPLETE`),
+matrice critère → preuve, défauts avec fichier/symbole, résultats des validations,
+incertitudes et risques. Prose complète pour : avertissement de sécurité, action
+irréversible, étapes dont l'ordre compte, question ou choix posé à l'humain, et tout
+texte écrit dans un fichier (code, commentaires, documentation). Le style ne
+s'applique jamais aux fichiers produits. En cas de conflit, la clarté l'emporte.
+
 ## Rapport et verdict
 
 Coder : `IMPLEMENTATION_READY_FOR_REVIEW`, fichiers, AC couverts, commandes,

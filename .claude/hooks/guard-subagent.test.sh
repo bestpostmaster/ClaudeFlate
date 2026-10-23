@@ -311,4 +311,12 @@ export CLAUDE_PROJECT_CONF="$R/.claude/absent.conf"
 B deny coder 'git status'
 B deny coder 'projectctl test'
 
+# --- Démarrage de session : le style concis est injecté, au format attendu
+if "$(dirname "$HOOK")/session-style.sh" |
+  jq -e '.hookSpecificOutput.hookEventName == "SessionStart" and (.hookSpecificOutput.additionalContext | contains("caveman"))' >/dev/null; then
+  echo "ok   injection du style concis au démarrage"
+else
+  echo "FAIL injection du style concis au démarrage"; fail=1
+fi
+
 [[ $fail -eq 0 ]] && echo "TOUS LES TESTS PASSENT" || { echo "ÉCHECS"; exit 1; }

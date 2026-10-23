@@ -14,6 +14,7 @@ Implémenter le plan et les tests ; les décisions techniques ordinaires suivent
 le code existant. Remonter au reviewer les changements de contrat/architecture.
 Ne pas déléguer, ne pas valider toi-même la feature, ne pas modifier Git.
 
+Appliquer la section « Style de sortie » de la politique : concis, sans perte de preuve.
 Exécuter les tests ciblés dans l'environnement du projet, vérifier le nombre de tests sélectionnés,
 puis retourner `IMPLEMENTATION_READY_FOR_REVIEW` avec les preuves. Les checks et
 suites complètes initiales/finales appartiennent au reviewer. Corrections :

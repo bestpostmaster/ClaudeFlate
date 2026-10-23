@@ -58,11 +58,13 @@ Préparer un besoin complet ; utiliser le modèle de spécification ci-dessous.
 | `agents/coder.md` | Implémentation et tests ciblés, Haiku imposé. |
 | `agents/independent-reviewer.md` | Analyse indépendante en lecture seule. |
 | `skills/feature/SKILL.md` | Entrée explicite `/feature`. |
+| `skills/caveman/` | Style de réponse concis (`/caveman`), copie non modifiée d'une skill communautaire ; voir `UPSTREAM.md`. |
 | `hooks/guard-workflow.sh` | Routage des contrôles par type d’agent au niveau projet. |
 | `project.conf` | Outillage du projet : commandes autorisées, fichiers sensibles. |
 | `hooks/test-fixture.conf` | Configuration fictive (`projectctl`) utilisée par le harnais de tests. |
 | `hooks/guard-subagent.sh` | Commandes, éditions, modèles et délégations. |
 | `hooks/workflow-state.sh` | Compteur verrouillé et autorisations humaines exactes. |
+| `hooks/session-style.sh` | Active le style concis au démarrage de la session principale. |
 | `hooks/journal-workflow.sh` | Observations des outils et retours des agents. |
 | `hooks/protect-git.sh` | Git visible dans Bash en lecture seule. |
 | `runtime/` | Journaux et compteurs locaux, ignorés par Git. |
@@ -132,3 +134,25 @@ gate final, compteur de cycles tenu par les hooks.
 Documentation officielle : [skills](https://code.claude.com/docs/en/skills),
 [sous-agents](https://code.claude.com/docs/en/sub-agents),
 [hooks](https://code.claude.com/docs/en/hooks).
+
+## Skill `caveman` (réponses concises)
+
+Un hook de démarrage (`hooks/session-style.sh`, entrée `SessionStart` de
+`settings.json`) l'active **par défaut** dans la session principale. Pour le
+désactiver : dire « stop caveman » (session en cours) ou retirer l'entrée
+`SessionStart` (définitivement).
+
+`/caveman` active un style de réponse bref (réponse d'abord, aucune formule de
+politesse, faits techniques intacts) jusqu'à « stop caveman ». C'est une copie
+**non modifiée** d'une skill communautaire (Apache-2.0), pas un projet Anthropic ;
+provenance, licence et limites dans `skills/caveman/UPSTREAM.md`.
+
+- Injectée **une fois par session** dans la session principale (~1 100 tokens d'entrée),
+  mais **pas dans les agents** : elle serait payée à chaque appel. Les agents suivent
+  la section « Style de sortie » de `feature-workflow.md`, qui reprend ses principes
+  utiles et protège les formats de rapport.
+- Ses exceptions (actions irréversibles, textes écrits dans les fichiers, questions
+  posées à l'humain) restent en prose normale ; les rapports du workflow
+  (verdicts, preuves) doivent garder leur format.
+- Les extensions du projet amont (proxy, compression, hooks, télémétrie) ne sont
+  pas incluses.
