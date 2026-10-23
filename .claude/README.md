@@ -25,7 +25,7 @@ toutes les opérations Git d'écriture.
 
 La politique est centralisée dans [feature-workflow.md](feature-workflow.md).
 Les agents et la skill y renvoient ; les règles applicatives restent dans
-[coding_standards.md](../coding_standards.md).
+[coding_standards.md](../CODING_STANDARDS.md).
 
 ## Prérequis
 

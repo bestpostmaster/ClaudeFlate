@@ -76,7 +76,7 @@ B deny reviewer 'projectctl format'
 B deny reviewer 'projectctl fix'
 B deny reviewer 'projectctl schema run'
 F deny reviewer "$R/zone-a/src/x.src"
-for doc in README.md docs/new-feature.md zone-a/README.md CLAUDE.md AGENTS.md coding_standards.md .claude/README.md .claude/feature-workflow.md .claude/agents/coder.md .claude/skills/feature/SKILL.md .ci/README.md; do
+for doc in README.md docs/new-feature.md zone-a/README.md CLAUDE.md AGENTS.md CODING_STANDARDS.md .claude/README.md .claude/feature-workflow.md .claude/agents/coder.md .claude/skills/feature/SKILL.md .ci/README.md; do
   F allow reviewer "$R/$doc"
 done
 F deny reviewer "$R/.claude/settings.json"
