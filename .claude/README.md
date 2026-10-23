@@ -5,6 +5,8 @@ commandes »), `.claude/project.conf` décrivent votre projet, avec les règles 
 
 ## Adopter le squelette dans un projet
 
+Guide détaillé, avec fusion de l'existant, exemple et dépannage : [GUIDE_IMPORT.md](../GUIDE_IMPORT.md).
+
 1. Copier `.claude/`, `CLAUDE.md`, `coding_standards.md`.
 2. Renseigner « Stack et commandes » dans `CLAUDE.md` et référencer vos standards.
 3. Renseigner `.claude/project.conf` : commandes de validation autorisées, fichiers

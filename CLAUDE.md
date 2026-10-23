@@ -4,7 +4,7 @@ Squelette d'agents Claude qui économise des tokens pendant le développement de
 features (Sonnet planifie et valide, Haiku code). Il est **indépendant de la
 stack** : copier `.claude/`, `CLAUDE.md`, `coding_standards.md` dans
 n'importe quel projet, puis renseigner la section « Stack et
-commandes » ci-dessous et `.claude/project.conf`.
+commandes » ci-dessous et `.claude/project.conf`. Pas à pas : **GUIDE_IMPORT.md**.
 
 ## Stack et commandes
 
