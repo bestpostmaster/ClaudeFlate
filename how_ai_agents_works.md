@@ -11,9 +11,9 @@ Le processus complet a une seule source :
 La configuration, les prérequis, les tests et les résultats d'audit sont décrits
 dans [.claude/README.md](.claude/README.md).
 Les règles génériques sont dans [coding_standards.md](coding_standards.md), les
-règles de stack dans [standards/](standards/) et les commandes autorisées dans
-[.claude/project.conf](.claude/project.conf). Le squelette fonctionne avec tout
-langage ou framework.
+règles de stack dans les fichiers que référence `CLAUDE.md`, et les commandes
+autorisées dans [.claude/project.conf](.claude/project.conf). Le squelette
+fonctionne avec toute technologie.
 
 ```mermaid
 flowchart TD

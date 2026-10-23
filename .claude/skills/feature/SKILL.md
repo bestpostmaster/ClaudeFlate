@@ -15,7 +15,7 @@ Demande :
 $ARGUMENTS
 
 Tu es directement `architect-reviewer` ; ne lance pas un deuxième architecte.
-Lire `CLAUDE.md`, `coding_standards.md`, les `standards/` référencés et `.claude/feature-workflow.md`, puis
+Lire `CLAUDE.md`, `coding_standards.md`, les règles de stack référencées et `.claude/feature-workflow.md`, puis
 appliquer cette politique centrale jusqu'au verdict final.
 
 Ce contexte ne contient pas automatiquement la discussion précédente. Établir

@@ -2,8 +2,8 @@
 
 Squelette d'agents Claude qui économise des tokens pendant le développement de
 features (Sonnet planifie et valide, Haiku code). Il est **indépendant de la
-stack** : copier `.claude/`, `CLAUDE.md`, `coding_standards.md` (et `standards/`
-si utile) dans n'importe quel projet, puis renseigner la section « Stack et
+stack** : copier `.claude/`, `CLAUDE.md`, `coding_standards.md` dans
+n'importe quel projet, puis renseigner la section « Stack et
 commandes » ci-dessous et `.claude/project.conf`.
 
 ## Stack et commandes
@@ -12,11 +12,11 @@ commandes » ci-dessous et `.claude/project.conf`.
 > déclaré ici et autorisé dans `.claude/project.conf`.
 
 - **Projet** : <nom, langage(s), framework(s), structure (monorepo ou non)>
-- **Environnement d'exécution** : <hôte, Docker Compose, devcontainer…>. Si un
+- **Environnement d'exécution** : <où et comment lancer les commandes>. Si un
   environnement isolé est imposé, ne rien lancer en dehors.
-- **Standards de stack** : <liens vers `standards/*.md`, ex. `standards/nestjs-angular.md`>
-- **Services nécessaires par périmètre** : <ex. `api` seul pour le back mocké ;
-  `api` + `db` pour l'intégration ; aucun pour la documentation>
+- **Standards de stack** : <liens vers vos fichiers de règles propres à la stack, ou « aucun »>
+- **Prérequis par périmètre** : <ex. composant A seul pour l'unitaire ;
+  composant A + base de données pour l'intégration ; aucun pour la documentation>
 
 | Action | Commande |
 | --- | --- |
@@ -26,12 +26,10 @@ commandes » ci-dessous et `.claude/project.conf`.
 | Tests e2e / intégration | `<commande>` |
 | Build | `<commande>` |
 
-Exemple rempli : `standards/nestjs-angular.md` et `.claude/presets/docker-compose-npm.conf`.
-
 ## Règles de codage
 
 Les règles génériques sont dans **@coding_standards.md** ; les règles propres à la
-stack, dans les fichiers de `standards/` référencés ci-dessus. Les lire avant toute
+stack, dans les fichiers référencés ci-dessus. Les lire avant toute
 modification et les appliquer systématiquement.
 
 Rappels clés, valables partout :

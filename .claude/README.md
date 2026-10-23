@@ -1,15 +1,16 @@
 # Agents Claude du projet
 
 Squelette **indépendant de la stack** : seuls `CLAUDE.md` (section « Stack et
-commandes »), `.claude/project.conf` et `standards/` décrivent votre projet.
+commandes »), `.claude/project.conf` décrivent votre projet, avec les règles de stack que vous référencez.
 
 ## Adopter le squelette dans un projet
 
-1. Copier `.claude/`, `CLAUDE.md`, `coding_standards.md` (et `standards/` si utile).
+1. Copier `.claude/`, `CLAUDE.md`, `coding_standards.md`.
 2. Renseigner « Stack et commandes » dans `CLAUDE.md` et référencer vos standards.
-3. Choisir l'outillage autorisé pour les agents : garder `project.conf` (cibles
-   `make`) ou copier un préréglage de `presets/` (`docker-compose-npm.conf`,
-   `host-npm.conf`) puis ajuster les regex à vos commandes réelles.
+3. Renseigner `.claude/project.conf` : commandes de validation autorisées, fichiers
+   sensibles, chemins protégés. **Il est vide par défaut** : tant qu'il n'est pas
+   rempli, les agents ne peuvent rien exécuter et aucun fichier sensible n'est
+   protégé.
 4. Vérifier : `bash .claude/hooks/guard-subagent.test.sh`.
 
 `/feature <besoin autonome + critères, ou chemin de spécification>` lance
@@ -31,7 +32,7 @@ Les agents et la skill y renvoient ; les règles applicatives restent dans
   les modèles déclarés des agents.
 - `bash`, `jq`, `realpath`, `tr`, `sed`, `date`, `mktemp`, `mv`, `mkdir`, `flock`, `git` ; le harnais de tests utilise aussi `grep`, `sort`,
   `readlink`, `ln`, `rm`.
-- L'environnement d'exécution déclaré dans `CLAUDE.md` (hôte, Docker, etc.) pour
+- L'environnement d'exécution déclaré dans `CLAUDE.md` (hôte, conteneur, machine virtuelle…) pour
   les validations applicatives ; seuls les prérequis du périmètre sont exigés.
   L'analyse reste possible sans environnement.
 - Redémarrer Claude après changement de configuration pour charger les hooks.
@@ -57,7 +58,7 @@ Préparer un besoin complet ; utiliser le modèle de spécification ci-dessous.
 | `skills/feature/SKILL.md` | Entrée explicite `/feature`. |
 | `hooks/guard-workflow.sh` | Routage des contrôles par type d’agent au niveau projet. |
 | `project.conf` | Outillage du projet : commandes autorisées, fichiers sensibles. |
-| `presets/` | `project.conf` prêts à l'emploi (Docker Compose + npm, npm hôte). |
+| `hooks/test-fixture.conf` | Configuration fictive (`projectctl`) utilisée par le harnais de tests. |
 | `hooks/guard-subagent.sh` | Commandes, éditions, modèles et délégations. |
 | `hooks/workflow-state.sh` | Compteur verrouillé et autorisations humaines exactes. |
 | `hooks/journal-workflow.sh` | Observations des outils et retours des agents. |
@@ -91,9 +92,9 @@ bash .claude/hooks/guard-subagent.test.sh
 ```
 
 Puis les commandes de validation de votre projet, telles que déclarées dans
-`CLAUDE.md`. Le harnais de tests des hooks utilise le préréglage
-`presets/docker-compose-npm.conf` comme jeu d'essai ; la logique reste la même
-pour tout `project.conf`.
+`CLAUDE.md`. Le harnais de tests des hooks utilise une configuration fictive
+(`hooks/test-fixture.conf`, outil imaginaire `projectctl`) : la logique est la
+même pour tout `project.conf`.
 
 Les hooks et leur harnais Bash tournent sur l'hôte ; les outils applicatifs
 tournent dans l'environnement déclaré par le projet. Les tests couvrent refus Git/shell/édition, modèles,

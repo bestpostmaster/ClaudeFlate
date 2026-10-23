@@ -1,7 +1,7 @@
 # Politique du workflow `/feature`
 
 Source unique du processus, indépendant de la stack ; `coding_standards.md` et
-les `standards/` référencés par `CLAUDE.md` restent la source des règles
+les règles de stack référencées par `CLAUDE.md` restent la source des règles
 applicatives. Les commandes, services et outils propres au projet sont déclarés
 dans `CLAUDE.md` (« Stack et commandes ») et `.claude/project.conf`. Sonnet planifie et valide, **Haiku est le seul coder**, sans
 remplacement de modèle. `architect-reviewer` peut créer et modifier les fichiers
@@ -58,7 +58,7 @@ validation obligatoire échoue. Ne pas supprimer ni affaiblir un test pour passe
 
 ## Plan et budget
 
-Le plan indique les fichiers/symboles, décisions, contrat front/back, migrations,
+Le plan indique les fichiers/symboles, décisions, contrats entre composants, migrations,
 services et une matrice `critère → scénario → test ou preuve observable`.
 Découper une grande feature en étapes cohérentes avant le premier appel.
 Une demande simple dispose de **trois appels au coder**. Une grande feature
@@ -152,9 +152,9 @@ commande sont limitées à la catégorie `EXCEPTION_RE` de `.claude/project.conf
 (installation, démarrage de services…) ; proposer un sous-ensemble minimal.
 Pour le coder, les règles des agents restent protégées, même avec une exception.
 Le reviewer dispose de l'autorisation Markdown décrite ci-dessus. `.git`, secrets,
-journaux, anciennes migrations et chemins hors projet restent protégés. Les fichiers infra/CI,
-Makefile, manifestes et lockfiles (tous écosystèmes courants) peuvent être autorisés
-individuellement.
+journaux, anciennes migrations et chemins hors projet restent protégés. Les fichiers déclarés sensibles
+dans `.claude/project.conf` (dépendances, build, infrastructure, CI) peuvent être
+autorisés individuellement.
 Sans autorisation valide, retourner un blocage précis avec proposition prête.
 L'autorisation n'est pas déduite du temps écoulé. Supprimer les exceptions après
 usage côté humain ; elles restent valides jusqu'à expiration dans cette session.

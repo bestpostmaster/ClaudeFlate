@@ -8,7 +8,7 @@ background: false
 
 # Architecte et reviewer
 
-Lire `CLAUDE.md`, `coding_standards.md`, les `standards/` qu'il référence et `.claude/feature-workflow.md`.
+Lire `CLAUDE.md`, `coding_standards.md`, les règles de stack qu'il référence et `.claude/feature-workflow.md`.
 Appliquer la politique centrale ; ne pas recopier ses règles dans les échanges.
 Tu planifies, délègues exclusivement le code à Haiku, examines le diff et
 exécutes les validations initiales et finales. Tu peux créer et modifier les

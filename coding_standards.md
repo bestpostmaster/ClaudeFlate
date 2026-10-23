@@ -1,12 +1,12 @@
 # coding_standards.md — Socle de règles pour l'agent IA
 
-Règles **indépendantes de toute stack** que tout agent IA doit respecter lorsqu'il modifie ce dépôt.
+Règles **indépendantes de toute technologie** que tout agent IA doit respecter lorsqu'il modifie ce dépôt.
 Objectif : un code **lisible, testé, sûr et cohérent**, quel que soit le langage ou le framework.
 
 > Règle d'or : **lire avant d'écrire**. Imiter les conventions du code voisin (nommage, densité de commentaires, structure) plutôt que d'en introduire de nouvelles.
 
 Les règles propres à la stack du projet (langage, framework, outillage, architecture) sont
-déclarées dans `CLAUDE.md` (section « Stack et commandes ») et dans les fichiers de `standards/`
+déclarées dans `CLAUDE.md` (section « Stack et commandes ») et dans les fichiers
 qu'il référence. Elles complètent ce socle et prévalent en cas de conflit. Les commandes
 autorisées pour les agents sont déclarées dans `.claude/project.conf`.
 
@@ -14,8 +14,8 @@ autorisées pour les agents sont déclarées dans `.claude/project.conf`.
 
 ## 1. Environnement et commandes
 
-- Utiliser **uniquement** les commandes déclarées dans `CLAUDE.md` (installation, check, tests, build, formatage). Ne pas deviner la commande d'un outil : la lire dans les scripts du projet (`Makefile`, `package.json`, `pyproject.toml`, `composer.json`, `go.mod`…).
-- Si `CLAUDE.md` impose un environnement isolé (conteneurs, devcontainer, virtualenv), ne rien exécuter hors de celui-ci. Corriger un problème d'environnement **dans sa configuration** (Dockerfile, compose, Makefile), pas en bricolant sur l'hôte.
+- Utiliser **uniquement** les commandes déclarées dans `CLAUDE.md` (installation, check, tests, build, formatage). Ne pas deviner la commande d'un outil : la lire dans les scripts du projet (fichiers de build, de dépendances ou de tâches).
+- Si `CLAUDE.md` impose un environnement isolé (conteneur, machine virtuelle, environnement dédié), ne rien exécuter hors de celui-ci. Corriger un problème d'environnement **dans sa configuration** (fichiers de build ou d'infrastructure), pas en bricolant sur l'hôte.
 - Une tâche n'est **terminée** que si les commandes de validation du projet passent (au minimum : formatage/lint/typage, tests, et build ou e2e si le comportement l'exige). Ne jamais déclarer « ça marche » sans les avoir exécutées ; si elles ne peuvent pas l'être, le dire explicitement.
 
 ## 2. Principes généraux
@@ -24,19 +24,19 @@ autorisées pour les agents sont déclarées dans `.claude/project.conf`.
 2. **Pas de duplication** : chercher d'abord si un helper, service ou composant existe déjà.
 3. **Petites unités** : une fonction fait une chose ; un fichier a une responsabilité ; viser des fonctions courtes (< 30 lignes) et une complexité cyclomatique faible.
 4. **Nommage explicite** : noms qui disent l'intention. Pas d'abréviations obscures. Booléens : `isX`, `hasX`, `canX` (ou l'idiome du langage).
-5. **Typage et contrats stricts** : activer/respecter le niveau de rigueur de l'outil du projet (types, nullabilité, linters). Pas de contournement (`any`, casts forcés, `!`, `@SuppressWarnings`, `# type: ignore`) sans justification écrite.
+5. **Typage et contrats stricts** : activer/respecter le niveau de rigueur de l'outil du projet (types, nullabilité, linters). Pas de contournement (conversions forcées, désactivation de règles ou d'avertissements) sans justification écrite.
 6. **Immutabilité par défaut** : préférer les valeurs constantes et les structures non mutables ; ne pas muter les paramètres.
 7. **Gestion d'erreur explicite** : ne jamais avaler une erreur (bloc `catch`/`except`/`rescue` vide interdit). Lever des erreurs typées et significatives, journaliser avec contexte.
 8. **Code mort interdit** : pas de code commenté, de logs de debug, de `TODO` sans ticket, d'imports inutilisés.
 9. **Commentaires** : expliquer le **pourquoi**, jamais le **quoi**. Écrire dans la langue des commentaires existants du dépôt.
-10. **Pas de secret en dur** : jamais de mot de passe, clé, token dans le code ou les fichiers versionnés. Utiliser des variables d'environnement ou un gestionnaire de secrets, et documenter dans le fichier d'exemple (`.env.example`).
+10. **Pas de secret en dur** : jamais de mot de passe, clé, token dans le code ou les fichiers versionnés. Utiliser des variables d'environnement ou un gestionnaire de secrets, et documenter dans le fichier d'exemple de configuration.
 11. **Dépendances** : n'en ajouter que si indispensable (maintenance, licence, taille) ; les installer avec l'outil du projet (jamais à la main dans le lockfile) ; mettre à jour manifeste **et** lockfile ensemble.
 12. **Sécurité (OWASP)** : valider toute entrée à la frontière du système, requêtes paramétrées uniquement, ne jamais exposer d'information sensible (hash, stack trace, secret) dans les réponses ou les logs.
 13. **Accessibilité et performance** (pour toute interface) sont des critères de qualité, pas des bonus.
 
 ### Formatage
 
-Laisser l'outil de formatage du projet trancher (Prettier, Black, gofmt, rustfmt, php-cs-fixer, spotless…) ; ne pas débattre du style. Exécuter le formatage avant de finir.
+Laisser l'outil de formatage du projet trancher ; ne pas débattre du style. Exécuter le formatage avant de finir.
 
 ### Git
 
@@ -56,17 +56,17 @@ Laisser l'outil de formatage du projet trancher (Prettier, Black, gofmt, rustfmt
 ## 4. Interfaces et contrats (API, CLI, bibliothèque, UI)
 
 - **Valider toutes les entrées** à la frontière (schéma, DTO, parseur typé) ; ne pas se contenter de contrôles ad hoc.
-- Statuts et codes de sortie **sémantiques** (par exemple HTTP : `201` création, `400` entrée invalide, `401` non authentifié, `403` interdit, `404` introuvable, `409` conflit).
+- Statuts et codes de sortie **sémantiques** (par exemple pour un service réseau : création, entrée invalide, non authentifié, interdit, introuvable, conflit).
 - Ne jamais renvoyer un objet de persistance brut contenant des champs sensibles : mapper vers un objet de réponse.
 - Listes : pagination bornée. Dates en ISO 8601 UTC, identifiants stables, noms de champs cohérents avec l'existant.
-- Si plusieurs parties dialoguent (back ↔ front, service ↔ service, bibliothèque ↔ consommateurs), la **source de vérité du contrat** est identifiée. Toute modification de contrat met à jour, **dans le même changement**, producteur, consommateurs et tests des deux côtés. Un changement cassant passe par une nouvelle version ou une période de compatibilité, jamais une rupture silencieuse.
+- Si plusieurs parties dialoguent (client ↔ serveur, service ↔ service, bibliothèque ↔ consommateurs), la **source de vérité du contrat** est identifiée. Toute modification de contrat met à jour, **dans le même changement**, producteur, consommateurs et tests des deux côtés. Un changement cassant passe par une nouvelle version ou une période de compatibilité, jamais une rupture silencieuse.
 
 ## 5. Authentification et sécurité
 
 - Mots de passe : algorithme de hachage adapté (bcrypt/argon2/scrypt, coût élevé), jamais loggés ni retournés. Messages d'échec de connexion **identiques** pour « utilisateur inconnu » et « mauvais mot de passe ».
 - Jetons : algorithme explicite, expiration courte, payload minimal (aucune donnée personnelle superflue), validation stricte (signature, expiration). La durée vient de la configuration.
-- Stockage des jetons côté client : privilégier un cookie `HttpOnly` (`Secure`, `SameSite`, protection CSRF) ; sinon mémoire seule. `localStorage` uniquement si la persistance est un critère d'acceptation, avec justification et risque XSS documentés.
-- Limiter le débit des endpoints sensibles (connexion), restreindre CORS à l'origine réelle, ne jamais autoriser `*` en production.
+- Stockage des jetons côté client : privilégier un cookie inaccessible au code client (transport sécurisé, portée restreinte, protection CSRF) ; sinon mémoire seule. Un stockage accessible au code client n'est admis que si la persistance est un critère d'acceptation, avec justification et risque XSS documentés.
+- Limiter le débit des points d'entrée sensibles (connexion), restreindre les origines autorisées à celles qui sont réelles, ne jamais tout autoriser en production.
 - Un contrôle côté client est une aide d'UX, jamais une protection : l'autorisation réelle reste côté serveur.
 - Ne jamais logguer identifiants, jetons, hash ni données personnelles non nécessaires.
 
@@ -74,7 +74,7 @@ Laisser l'outil de formatage du projet trancher (Prettier, Black, gofmt, rustfmt
 
 - Accès à la configuration via un point unique (service/module de config), pas de lecture d'environnement éparpillée.
 - **Valider la configuration au démarrage** : échec rapide si une variable obligatoire manque ou garde sa valeur de dev en production.
-- Toute nouvelle variable : fichier d'exemple (`.env.example`), fichiers d'orchestration (compose, CI, déploiement) et documentation.
+- Toute nouvelle variable : fichier d'exemple de configuration, fichiers d'orchestration (CI, déploiement) et documentation.
 - Valeurs par défaut de dev : uniquement dans les fichiers d'exemple/orchestration de dev, jamais dans le code applicatif.
 
 ## 7. Base de données
@@ -87,7 +87,7 @@ Laisser l'outil de formatage du projet trancher (Prettier, Black, gofmt, rustfmt
 
 ## 8. Journalisation et gestion des erreurs
 
-- Journaliser via le logger du projet, de façon **structurée** (contexte puis message court), jamais via `print`/`console.*` de debug.
+- Journaliser via le logger du projet, de façon **structurée** (contexte puis message court), jamais via des affichages de debug.
 - Niveaux : `error` (action requise), `warn` (anormal récupérable), `info` (événements métier), `debug` (diagnostic).
 - Erreurs : exceptions typées dans le domaine, converties en réponses par un point central ; messages exploitables **sans fuite d'information interne**. Jamais de `throw` d'une chaîne brute ; pas de `try/catch` qui ne fait que relancer.
 
@@ -115,11 +115,11 @@ Laisser l'outil de formatage du projet trancher (Prettier, Black, gofmt, rustfmt
 
 ## 12. Infrastructure et conteneurs (si applicable)
 
-- Versions de runtime **épinglées**, `.dockerignore` à jour, pas de secrets dans les couches d'image.
+- Versions de runtime **épinglées**, fichier d'exclusion de build à jour, pas de secrets dans les couches d'image.
 - Tout nouveau service d'infrastructure (cache, broker…) : healthcheck, volume nommé si état persistant, dépendances déclarées.
 - Ne jamais exposer base de données, cache ou outils d'administration publiquement hors dev.
 - Dans un réseau de conteneurs, joindre un service par son nom de service, jamais par `localhost`.
-- Suppression de volumes/données (`down -v`) : **demander confirmation**.
+- Suppression de volumes/données (arrêt avec suppression des volumes) : **demander confirmation**.
 
 ---
 

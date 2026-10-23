@@ -3,7 +3,7 @@
 set -uo pipefail
 HOOK="$(dirname "$(readlink -f "$0")")/guard-subagent.sh"
 export CLAUDE_PROJECT_DIR="$(readlink -f "$(dirname "$HOOK")/../..")"
-export CLAUDE_PROJECT_CONF="$CLAUDE_PROJECT_DIR/.claude/presets/docker-compose-npm.conf"
+export CLAUDE_PROJECT_CONF="$CLAUDE_PROJECT_DIR/.claude/hooks/test-fixture.conf"
 fail=0
 
 # verdict <profil> <json> -> "allow" | "deny"
@@ -27,28 +27,28 @@ F() { expect "$1" "$2" "$(file_json "$3")" "[$2] write $3"; }
 
 R="$CLAUDE_PROJECT_DIR"
 # --- Autorisé (coder)
-B allow coder 'docker compose exec back npm run check'
-B allow coder 'docker compose exec -T front npm test -- --watch=false'
-B allow coder 'docker compose exec back npm run migration:generate -- src/database/migrations/AddX'
-B allow coder 'docker compose exec front npm run format'
-B allow coder 'docker compose ps'
-B allow coder 'docker compose logs --tail 50 back'
+B allow coder 'projectctl check'
+B allow coder 'projectctl test -- --watch=false'
+B allow coder 'projectctl schema generate -- db/changes/AddX'
+B allow coder 'projectctl format'
+B allow coder 'projectctl status'
+B allow coder 'projectctl logs --tail 50 app'
 B allow coder 'git status'
 B allow coder 'git diff --stat'
 B allow coder 'git log --oneline -5'
 B allow coder 'git show HEAD~1'
 # --- Contournements Git / shell (coder)
 B deny coder 'bash script-qui-fait-un-git-push.sh'
-B deny coder 'make quelque-chose-qui-commit'
-B deny coder 'make test'
-B deny coder 'docker compose exec back git push'
-B deny coder 'docker compose exec back sh -c ls'
-B deny coder 'docker compose exec back node -e 1'
-B deny coder 'docker compose exec back npm run check; git push'
-B deny coder 'docker compose exec back npm run check && git push'
-B deny coder 'docker compose exec back npm run check | tee out'
-B deny coder 'docker compose exec back npm run check > out'
-B deny coder 'docker compose ps
+B deny coder 'buildtool deploy'
+B deny coder 'buildtool test'
+B deny coder 'projectctl git push'
+B deny coder 'projectctl sh -c ls'
+B deny coder 'projectctl run-script -e 1'
+B deny coder 'projectctl check; git push'
+B deny coder 'projectctl check && git push'
+B deny coder 'projectctl check | tee out'
+B deny coder 'projectctl check > out'
+B deny coder 'projectctl status
 git push'
 B deny coder 'echo $(git push)'
 B deny coder 'git add .'
@@ -62,65 +62,65 @@ B deny coder '/usr/bin/git push'
 B deny coder 'command git push'
 B deny coder 'GIT_DIR=x git push'
 B deny coder 'env git push'
-B deny coder 'npm run check'
-B deny coder 'docker compose exec back npm install foo'
-B deny coder 'docker compose exec front npm run migration:run'
-B deny coder 'docker compose run --rm back npm run check'
-B deny coder 'docker compose down -v'
-B deny coder 'docker compose logs -f back'
+B deny coder 'othertool check'
+B deny coder 'projectctl install foo'
+B deny coder 'projectctl schema run'
+B deny coder 'projectctl run --rm check'
+B deny coder 'projectctl stop -v'
+B deny coder 'projectctl logs -f app'
 B deny coder ''
 # --- Reviewer : validations et édition Markdown uniquement
-B allow reviewer 'docker compose exec back npm run check'
+B allow reviewer 'projectctl check'
 B allow reviewer 'git diff'
-B deny reviewer 'docker compose exec back npm run format'
-B deny reviewer 'docker compose exec back npm run lint:fix'
-B deny reviewer 'docker compose exec back npm run migration:run'
-F deny reviewer "$R/back/src/x.ts"
-for doc in README.md docs/new-feature.md back/README.md CLAUDE.md AGENTS.md coding_standards.md .claude/README.md .claude/feature-workflow.md .claude/agents/coder.md .claude/skills/feature/SKILL.md .github/README.md; do
+B deny reviewer 'projectctl format'
+B deny reviewer 'projectctl fix'
+B deny reviewer 'projectctl schema run'
+F deny reviewer "$R/zone-a/src/x.src"
+for doc in README.md docs/new-feature.md zone-a/README.md CLAUDE.md AGENTS.md coding_standards.md .claude/README.md .claude/feature-workflow.md .claude/agents/coder.md .claude/skills/feature/SKILL.md .ci/README.md; do
   F allow reviewer "$R/$doc"
 done
 F deny reviewer "$R/.claude/settings.json"
 F deny reviewer "$R/.claude/hooks/guard-subagent.sh"
 F deny reviewer "$R/.claude/runtime/report.md"
 F deny reviewer "$R/.git/README.md"
-F deny reviewer "$R/back/.git/README.md"
+F deny reviewer "$R/zone-a/.git/README.md"
 F deny reviewer "$R/.env.notes.md"
 F deny reviewer "$R/../other-project/README.md"
 F deny reviewer "README.md"
 F deny readonly "$R/README.md"
 F deny readonly "$R/.claude/README.md"
 # --- Fichiers (coder)
-F allow coder "$R/back/src/x.ts"
-F allow coder "$R/front/src/app/x.ts"
+F allow coder "$R/zone-a/src/x.src"
+F allow coder "$R/zone-b/src/app/x.src"
 F allow coder "$R/.env.example"
 F deny coder "$R/.claude/settings.json"
 F deny coder "$R/.claude/hooks/guard-subagent.sh"
 F deny coder "$R/.git/config"
-F deny coder "$R/back/../.git/hooks/pre-commit"
+F deny coder "$R/zone-a/../.git/hooks/pre-commit"
 F deny coder "$R/.env"
-F deny coder "$R/back/.env"
+F deny coder "$R/zone-a/.env"
 F deny coder "$R/CLAUDE.md"
 F deny coder "$R/coding_standards.md"
-F deny coder "$R/Makefile"
+F deny coder "$R/Buildfile"
 F deny coder "/etc/passwd"
-F deny coder "$R/../autre-projet/x.ts"
-F deny coder "back/src/x.ts"
+F deny coder "$R/../autre-projet/x.src"
+F deny coder "zone-a/src/x.src"
 
 # --- Règles imbriquées et délégation
-F deny coder "$R/back/CLAUDE.md"
-F deny coder "$R/front/AGENTS.md"
-F deny coder "$R/back/.claude/settings.json"
-F deny coder "$R/back/coding_standards.md"
-F deny coder "$R/front/Makefile"
-for sensitive in package.json back/package.json front/package-lock.json yarn.lock pnpm-lock.yaml bun.lockb docker-compose.yml compose.yaml back/Dockerfile front/Dockerfile.dev .github/workflows/check.yml back/.gitlab-ci.yml Jenkinsfile; do
+F deny coder "$R/zone-a/CLAUDE.md"
+F deny coder "$R/zone-b/AGENTS.md"
+F deny coder "$R/zone-a/.claude/settings.json"
+F deny coder "$R/zone-a/coding_standards.md"
+F deny coder "$R/zone-b/Buildfile"
+for sensitive in deps.cfg zone-a/deps.cfg zone-b/deps.lock Buildfile infra.cfg infra.cfg.dev zone-a/infra.cfg.prod .ci/check.cfg zone-a/.ci/run.cfg ops/deploy.cfg; do
   F deny coder "$R/$sensitive"
 done
 while IFS= read -r migration; do
   F deny coder "$R/$migration"
-done < <(git -C "$R" ls-files back/src/database/migrations)
-F allow coder "$R/back/src/database/migrations/9999999999999-ClaudeGuardNew.ts"
-B deny coder 'docker compose exec back npm run migration:create -- ../package.json'
-B deny coder 'docker compose exec back npm run format -- ../package.json'
+done < <(git -C "$R" ls-files zone-a/db/changes)
+F allow coder "$R/zone-a/db/changes/9999999999999-ClaudeGuardNew.src"
+B deny coder 'projectctl schema create -- ../deps.cfg'
+B deny coder 'projectctl format -- ../deps.cfg'
 expect deny reviewer '{"tool_name":"Agent","tool_input":{"subagent_type":"coder"}}' 'coder sans métadonnées de budget'
 expect allow reviewer '{"tool_name":"Agent","tool_input":{"subagent_type":"independent-reviewer"}}' 'review indépendante en lecture seule'
 expect deny reviewer '{"tool_name":"Agent","tool_input":{"subagent_type":"general-purpose"}}' 'autre agent'
@@ -140,7 +140,7 @@ G() {
 }
 G allow 'git diff --stat'
 G allow 'git status --short'
-G allow 'docker compose ps'
+G allow 'projectctl status'
 G allow 'cat foo.git'
 G allow 'cat /tmp/foo.git'
 G allow 'git diff -- foo.git'
@@ -224,36 +224,36 @@ approved_file_json() { jq -cn --arg p "$1" '{session_id:"test-session",tool_name
 approved_bash_json() { jq -cn --arg c "$1" '{session_id:"test-session",tool_name:"Bash",tool_input:{command:$c}}'; }
 set_approval() {
   jq -n --arg session "$1" --argjson expiry "$2" \
-    '{session_id:$session,expires_at:$expiry,files:["back/package.json","docker-compose.yml",".github/workflows/check.yml","Makefile",".claude/settings.json",".env","../outside"],commands:["docker compose exec -T back npm install example@1.0.0","docker compose up -d back","git push","bash script.sh","docker compose exec back node script.js"]}' \
+    '{session_id:$session,expires_at:$expiry,files:["zone-a/deps.cfg","infra.cfg",".ci/check.cfg","Buildfile",".claude/settings.json",".env","../outside"],commands:["projectctl install example@1.0.0","projectctl start app","git push","bash script.sh","projectctl run-script script.src"]}' \
     >"$TASK_TMP/.claude/feature-approvals.json"
 }
 set_approval test-session "$(( $(date +%s) + 60 ))"
-expect allow coder "$(approved_file_json "$TASK_TMP/back/package.json")" 'manifest autorisé exactement'
-expect allow coder "$(approved_file_json "$TASK_TMP/docker-compose.yml")" 'compose autorisé exactement'
-expect allow coder "$(approved_file_json "$TASK_TMP/.github/workflows/check.yml")" 'CI autorisée exactement'
-expect allow coder "$(approved_file_json "$TASK_TMP/Makefile")" 'Makefile autorisé exactement'
-expect deny coder "$(approved_file_json "$TASK_TMP/front/package.json")" 'autre manifest refusé'
-expect deny reviewer "$(approved_file_json "$TASK_TMP/back/package.json")" 'reviewer reste sans édition'
+expect allow coder "$(approved_file_json "$TASK_TMP/zone-a/deps.cfg")" 'manifest autorisé exactement'
+expect allow coder "$(approved_file_json "$TASK_TMP/infra.cfg")" 'infrastructure autorisée exactement'
+expect allow coder "$(approved_file_json "$TASK_TMP/.ci/check.cfg")" 'CI autorisée exactement'
+expect allow coder "$(approved_file_json "$TASK_TMP/Buildfile")" 'Buildfile autorisé exactement'
+expect deny coder "$(approved_file_json "$TASK_TMP/zone-b/deps.cfg")" 'autre manifest refusé'
+expect deny reviewer "$(approved_file_json "$TASK_TMP/zone-a/deps.cfg")" 'reviewer reste sans édition'
 expect deny coder "$(approved_file_json "$TASK_TMP/.claude/settings.json")" 'règles restent protégées'
 expect deny coder "$(approved_file_json "$TASK_TMP/.env")" 'secrets restent protégés'
-expect allow coder "$(approved_bash_json 'docker compose exec -T back npm install example@1.0.0')" 'installation exacte autorisée'
-expect deny coder "$(approved_bash_json 'docker compose exec -T back npm install example@2.0.0')" 'version non autorisée'
-expect deny reviewer "$(approved_bash_json 'docker compose exec -T back npm install example@1.0.0')" 'reviewer ne peut installer'
-expect allow coder "$(approved_bash_json 'docker compose up -d back')" 'démarrage exact autorisé'
+expect allow coder "$(approved_bash_json 'projectctl install example@1.0.0')" 'installation exacte autorisée'
+expect deny coder "$(approved_bash_json 'projectctl install example@2.0.0')" 'version non autorisée'
+expect deny reviewer "$(approved_bash_json 'projectctl install example@1.0.0')" 'reviewer ne peut installer'
+expect allow coder "$(approved_bash_json 'projectctl start app')" 'démarrage exact autorisé'
 expect deny coder "$(approved_bash_json 'git push')" 'exception Git impossible'
 expect deny coder "$(approved_bash_json 'bash script.sh')" 'exception shell impossible'
-expect deny coder "$(approved_bash_json 'docker compose exec back node script.js')" 'exception node arbitraire impossible'
+expect deny coder "$(approved_bash_json 'projectctl run-script script.src')" 'exception de script arbitraire impossible'
 set_approval another-session "$(( $(date +%s) + 60 ))"
-expect deny coder "$(approved_file_json "$TASK_TMP/back/package.json")" 'autorisation liée à la session'
+expect deny coder "$(approved_file_json "$TASK_TMP/zone-a/deps.cfg")" 'autorisation liée à la session'
 set_approval test-session "$(( $(date +%s) - 1 ))"
-expect deny coder "$(approved_file_json "$TASK_TMP/back/package.json")" 'autorisation expirée'
+expect deny coder "$(approved_file_json "$TASK_TMP/zone-a/deps.cfg")" 'autorisation expirée'
 printf 'invalid JSON' >"$TASK_TMP/.claude/feature-approvals.json"
-expect deny coder "$(approved_file_json "$TASK_TMP/back/package.json")" 'autorisation invalide fermée'
+expect deny coder "$(approved_file_json "$TASK_TMP/zone-a/deps.cfg")" 'autorisation invalide fermée'
 
 # Les chemins et le runtime ne peuvent sortir du projet via des liens.
-mkdir -p "$TASK_TMP/external" "$TASK_TMP/back"
-ln -s "$R/back/package.json" "$TASK_TMP/back/package.json"
-expect deny coder "$(approved_file_json "$TASK_TMP/back/package.json")" 'lien fichier vers autre projet refusé'
+mkdir -p "$TASK_TMP/external" "$TASK_TMP/zone-a"
+ln -s "$R/zone-a/deps.cfg" "$TASK_TMP/zone-a/deps.cfg"
+expect deny coder "$(approved_file_json "$TASK_TMP/zone-a/deps.cfg")" 'lien fichier vers autre projet refusé'
 mv "$TASK_TMP/.claude/runtime" "$TASK_TMP/external/runtime"
 ln -s "$TASK_TMP/external/runtime" "$TASK_TMP/.claude/runtime"
 expect deny reviewer "$(agent_json symlink 1 reviewer-four)" 'runtime non canonique refusé'
@@ -261,7 +261,7 @@ rm "$TASK_TMP/.claude/runtime"
 mv "$TASK_TMP/external/runtime" "$TASK_TMP/.claude/runtime"
 
 # Le journal conserve les échecs et les métadonnées sans générer un verdict.
-jq -cn '{session_id:"test-session",agent_id:"reviewer-one",hook_event_name:"PostToolUseFailure",tool_name:"Bash",tool_input:{command:"docker compose exec -T back npm test"},error:"one test failed"}' |
+jq -cn '{session_id:"test-session",agent_id:"reviewer-one",hook_event_name:"PostToolUseFailure",tool_name:"Bash",tool_input:{command:"projectctl test"},error:"one test failed"}' |
   "$(dirname "$HOOK")/journal-workflow.sh"
 if ! jq -e 'select(.event == "PostToolUseFailure" and .result == "one test failed")' "$TASK_TMP/.claude/runtime/test-session.jsonl" >/dev/null; then
   echo 'FAIL journal erreur'; fail=1
@@ -278,44 +278,37 @@ route_expect() {
   if [[ "$got" == "$1" ]]; then printf 'ok   %-5s routage %s\n' "$1" "$3"; else echo "FAIL routage $3: $got"; fail=1; fi
 }
 route_expect deny '{"agent_type":"coder","tool_name":"Bash","tool_input":{"command":"ls -la"}}' 'coder shell refusé'
-route_expect allow '{"agent_type":"coder","tool_name":"Bash","tool_input":{"command":"docker compose ps"}}' 'coder inspection autorisée'
-route_expect deny "$(jq -cn --arg p "$TASK_TMP/back/new.ts" '{agent_type:"architect-reviewer",tool_name:"Write",tool_input:{file_path:$p}}')" 'reviewer sans édition'
+route_expect allow '{"agent_type":"coder","tool_name":"Bash","tool_input":{"command":"projectctl status"}}' 'coder inspection autorisée'
+route_expect deny "$(jq -cn --arg p "$TASK_TMP/zone-a/new.src" '{agent_type:"architect-reviewer",tool_name:"Write",tool_input:{file_path:$p}}')" 'reviewer sans édition'
 for tool in Edit Write; do
   route_expect allow "$(jq -cn --arg tool "$tool" --arg p "$TASK_TMP/docs/feature.md" '{agent_type:"architect-reviewer",tool_name:$tool,tool_input:{file_path:$p}}')" "architecte $tool Markdown"
   route_expect deny "$(jq -cn --arg tool "$tool" --arg p "$TASK_TMP/docs/feature.md" '{agent_type:"independent-reviewer",tool_name:$tool,tool_input:{file_path:$p}}')" "review indépendante $tool Markdown refusé"
 done
-printf 'source code\n' >"$TASK_TMP/back/source.ts"
-ln -s "$TASK_TMP/back/source.ts" "$TASK_TMP/code-alias.md"
+printf 'source code\n' >"$TASK_TMP/zone-a/source.src"
+ln -s "$TASK_TMP/zone-a/source.src" "$TASK_TMP/code-alias.md"
 ln -s "$R/CLAUDE.md" "$TASK_TMP/outside-alias.md"
 ln -s "$TASK_TMP/snapshot.md" "$TASK_TMP/doc-alias.md"
-ln -s "$TASK_TMP/snapshot.md" "$TASK_TMP/false-extension.ts"
+ln -s "$TASK_TMP/snapshot.md" "$TASK_TMP/false-extension.src"
 F deny reviewer "$TASK_TMP/code-alias.md"
 F deny reviewer "$TASK_TMP/outside-alias.md"
 F allow reviewer "$TASK_TMP/doc-alias.md"
-F deny reviewer "$TASK_TMP/false-extension.ts"
+F deny reviewer "$TASK_TMP/false-extension.src"
 route_expect deny '{"agent_type":"independent-reviewer","tool_name":"Agent","tool_input":{"subagent_type":"coder"}}' 'review indépendante sans délégation'
 route_expect deny '{"tool_name":"Agent","tool_input":{"subagent_type":"coder"}}' 'session principale ne remplace pas reviewer'
 route_expect allow '{"tool_name":"Bash","tool_input":{"command":"ls"}}' 'conversation ordinaire hors workflow'
 export CLAUDE_PROJECT_DIR="$R"
 
-# --- project.conf par défaut (cibles make) : le squelette n'est lié à aucune stack
+# --- project.conf livré : tout est vide, donc rien n'est autorisé hors lecture de l'historique
 export CLAUDE_PROJECT_CONF="$R/.claude/project.conf"
-B allow coder 'make test'
-B allow coder 'make format'
-B allow reviewer 'make check'
-B deny reviewer 'make format'
-B deny coder 'make deploy'
-B deny coder 'make test -C /tmp'
-B deny coder 'docker compose exec back npm run check'
-B deny coder 'npm install foo'
+B deny coder 'projectctl test'
+B deny coder 'buildtool test'
+B deny reviewer 'projectctl check'
 B allow coder 'git status'
-F deny coder "$R/Makefile"
-F deny coder "$R/Cargo.lock"
-F deny coder "$R/go.mod"
-F deny coder "$R/composer.json"
-F allow coder "$R/src/main.rs"
+F allow coder "$R/src/main.src"
+F deny coder "$R/CLAUDE.md"
 # --- conf illisible : tout est refusé
 export CLAUDE_PROJECT_CONF="$R/.claude/absent.conf"
-B deny coder 'make test'
+B deny coder 'git status'
+B deny coder 'projectctl test'
 
 [[ $fail -eq 0 ]] && echo "TOUS LES TESTS PASSENT" || { echo "ÉCHECS"; exit 1; }

@@ -5,7 +5,7 @@
 # Principe : LISTE BLANCHE. Tout ce qui n'est pas explicitement autorisé est refusé.
 #  - commande autorisée -> approuvée automatiquement (aucune invite humaine) ;
 #  - commande refusée   -> exit 2 : l'agent reçoit le message, l'humain n'est jamais sollicité.
-# Il n'y a donc pas de shell arbitraire : ni `bash x.sh`, ni `make`, ni `docker compose exec ... sh/git`,
+# Il n'y a donc pas de shell arbitraire : ni script libre, ni outil de build générique, ni sous-commande shell/git,
 # ni chaînage (; & | $() backticks), redirection ou multi-lignes.
 set -euo pipefail
 
@@ -18,8 +18,7 @@ source "$(dirname "$0")/workflow-state.sh"
 PROJECT_CONF="${CLAUDE_PROJECT_CONF:-$(dirname "$0")/../project.conf}"
 [[ -r "$PROJECT_CONF" ]] || { echo "BLOCKED : configuration projet illisible : $PROJECT_CONF" >&2; exit 2; }
 VALIDATION_RE='' CODER_RE='' INSPECT_RE='' EXCEPTION_RE='' EXCEPTION_DENY_RE='' ALLOWED_HINT=''
-EXTRA_SENSITIVE_FILES_RE='' EXTRA_SENSITIVE_PATHS_RE=''
-IMMUTABLE_PATHS_RE='(^|/)(db/migrate|migrations?|alembic/versions)/'
+SENSITIVE_FILES_RE='' SENSITIVE_PATHS_RE='' PROTECTED_PATHS_RE='' IMMUTABLE_PATHS_RE=''
 # shellcheck source=/dev/null
 source "$PROJECT_CONF"
 # Vrai si $1 (commande) correspond à la regex $2 ; une regex vide ne correspond jamais.
@@ -77,7 +76,7 @@ bash_guard() {
 
   # Exceptions humaines exactes : jamais un shell/Git interne.
   if [[ "$PROFILE" == coder ]] && matches "$cmd" "$EXCEPTION_RE" &&
-    [[ ! "$cmd" =~ (^|[[:space:]])(sh|bash|git|node|psql|--entrypoint|--privileged)([[:space:]]|$) ]] &&
+    [[ ! "$cmd" =~ (^|[[:space:]])(sh|bash|git)([[:space:]]|$) ]] &&
     ! matches "$cmd" "$EXCEPTION_DENY_RE" &&
     approval_ok commands "$cmd"; then
     allow 'exception exacte autorisée par humain pour cette session'
@@ -107,35 +106,22 @@ file_guard() {
   fi
   case "$rel" in
     .env.example | */.env.example) ;;
-    .claude | .claude/* | */.claude | */.claude/* | .git | .git/* | */.git | */.git/* | .idea/* | .env | .env.* | */.env | */.env.* | \
+    .claude | .claude/* | */.claude | */.claude/* | .git | .git/* | */.git | */.git/* | .env | .env.* | */.env | */.env.* | \
       CLAUDE.md | */CLAUDE.md | AGENTS.md | */AGENTS.md | coding_standards.md | */coding_standards.md)
       deny "fichier protégé (config des agents, git, secrets ou règles) : $rel — modification réservée à l'humain."
       ;;
   esac
-  case "${rel##*/}" in
-    Makefile | GNUmakefile | justfile | Taskfile.yml | package.json | package-lock.json | npm-shrinkwrap.json | yarn.lock | pnpm-lock.yaml | bun.lock | bun.lockb | \
-      composer.json | composer.lock | Cargo.toml | Cargo.lock | go.mod | go.sum | pyproject.toml | poetry.lock | uv.lock | Pipfile | Pipfile.lock | \
-      requirements*.txt | Gemfile | Gemfile.lock | pom.xml | build.gradle | build.gradle.kts | settings.gradle* | gradle.properties | \
-      *.csproj | *.sln | Package.swift | mix.exs | mix.lock | pubspec.yaml | pubspec.lock | \
-      Dockerfile | Dockerfile.* | *.Dockerfile | docker-compose*.yml | docker-compose*.yaml | compose*.yml | compose*.yaml | \
-      .gitlab-ci*.yml | .gitlab-ci*.yaml | Jenkinsfile | Jenkinsfile.* | azure-pipelines*.yml | azure-pipelines*.yaml | .travis.yml)
-      if approval_ok files "$rel"; then allow 'édition sensible exacte autorisée par humain'; fi
-      deny "fichier sensible (dépendances, Docker ou CI) : $rel — proposition et autorisation humaine nécessaires."
-      ;;
-  esac
-  if matches "${rel##*/}" "$EXTRA_SENSITIVE_FILES_RE" || matches "$rel" "$EXTRA_SENSITIVE_PATHS_RE"; then
+  if matches "$rel" "$PROTECTED_PATHS_RE"; then
+    deny "chemin protégé par project.conf : $rel — modification réservée à l'humain."
+  fi
+  # Fichiers de dépendances, de build, d'infrastructure ou de CI : déclarés dans project.conf.
+  if matches "${rel##*/}" "$SENSITIVE_FILES_RE" || matches "$rel" "$SENSITIVE_PATHS_RE"; then
     if approval_ok files "$rel"; then allow 'édition sensible exacte autorisée par humain'; fi
     deny "fichier sensible déclaré dans project.conf : $rel — proposition et autorisation humaine nécessaires."
   fi
-  case "$rel" in
-    .github/* | */.github/* | .circleci/* | */.circleci/* | .buildkite/* | */.buildkite/*)
-      if approval_ok files "$rel"; then allow 'édition CI exacte autorisée par humain'; fi
-      deny "configuration CI protégée : $rel — proposition et autorisation humaine nécessaires."
-      ;;
-  esac
-  # Les nouvelles migrations restent éditables tant qu'elles ne sont pas versionnées.
+  # Fichiers à historique immuable (ex. changements de schéma) : éditables tant qu'ils ne sont pas versionnés.
   if matches "$rel" "$IMMUTABLE_PATHS_RE" && git -C "$root" ls-files --error-unmatch -- "$rel" >/dev/null 2>&1; then
-    deny "migration déjà versionnée : $rel — créer une nouvelle migration."
+    deny "fichier déjà versionné et immuable : $rel — créer un nouveau fichier."
   fi
   allow 'modification dans le périmètre du projet'
 }

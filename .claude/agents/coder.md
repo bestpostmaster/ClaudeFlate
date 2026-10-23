@@ -8,7 +8,7 @@ background: false
 
 # Implémentation Haiku
 
-Lire `CLAUDE.md`, `coding_standards.md`, les `standards/` référencés,
+Lire `CLAUDE.md`, `coding_standards.md`, les règles de stack référencées,
 `.claude/feature-workflow.md` et les fichiers du plan avant de modifier. Tu restes Haiku pour toutes les tâches.
 Implémenter le plan et les tests ; les décisions techniques ordinaires suivent
 le code existant. Remonter au reviewer les changements de contrat/architecture.
