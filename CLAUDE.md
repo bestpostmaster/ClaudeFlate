@@ -1,6 +1,8 @@
 # CLAUDE.md
 
-Monorepo : `back/` (NestJS 12 + TypeORM/PostgreSQL + BullMQ/Redis) et `front/` (Angular 22 + PrimeNG).
+Monorepo : 
+    `back/` (NestJS 12 + TypeORM/PostgreSQL + BullMQ/Redis)
+    `front/` (Angular 22 + PrimeNG).
 
 ## Règles de codage
 
